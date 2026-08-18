@@ -1,0 +1,17 @@
+services:
+  mc-server:
+    image: itzg/minecraft-server:java25-jdk
+    container_name: minecraft-server
+    environment:
+      EULA: "true"
+      VERSION: "26.2"
+    ports:
+      - "25565:25565"
+    volumes:
+      - mc-data:/data
+    stdin_open: true
+    tty: true
+
+volumes:
+  mc-data:
+    name: mc-data
