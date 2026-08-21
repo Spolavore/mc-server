@@ -12,6 +12,30 @@ Servidor modded (71 jars) rodando em container `itzg/minecraft-server`.
 O `.env` guarda `RCON_PASSWORD` (gerada automaticamente) e `OPS`.
 **Coloque seu nick em `OPS`** e recrie o container (`docker compose up -d`) para virar operador.
 
+## Rodar em outra máquina
+
+    git clone <este repo> && cd mc-server && ./init-server.sh
+
+Funciona direto porque:
+
+- os **71 jars estão versionados** em `mods/` (o repo tem ~250 MB por causa disso);
+- o `.env` é criado sozinho a partir do `.env.example`, com `RCON_PASSWORD` aleatória;
+- os configs de PvP vêm de **`config-overrides/`**, que o `init-server.sh` copia para
+  `server-data-neoforge/config/` a cada subida.
+
+**Regra importante:** edite config em `config-overrides/` e faça commit. Editar direto em
+`server-data-neoforge/config/` funciona até a próxima subida, quando é sobrescrito — e não sobrevive
+a um clone novo, porque `server-data-neoforge/` está no `.gitignore`.
+
+O que **não** vai junto: `server-data-neoforge/` inteiro. Numa máquina nova o NeoForge e o jar do
+Minecraft são baixados de novo (alguns minutos) e o **mundo `guerra` é gerado do zero, com outra
+seed**. Para levar o mundo, copie a pasta na mão:
+
+    rsync -a server-data-neoforge/guerra/ outro-pc:~/homelab/mc-server/server-data-neoforge/guerra/
+
+Na outra máquina precisa de: docker + compose, ~8 GB de RAM (heap 5G + overhead) e as portas
+25565/tcp e 24454/udp liberadas.
+
 ## Como está configurado
 
 | Item | Valor | Por quê |
