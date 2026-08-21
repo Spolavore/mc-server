@@ -1,4 +1,5 @@
 .env
 server-data/
+server-data-neoforge/
 backups/
-# plugins/*
+plugins

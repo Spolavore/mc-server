@@ -1,18 +1,50 @@
 services:
   mc-server:
-    image: itzg/minecraft-server:java25-jdk
+    image: itzg/minecraft-server:java21
     container_name: minecraft-server
-    environment:
-      EULA: "true"
-      TYPE: "PAPER"
-      VERSION: "26.2"
-    ports:
-      - "25565:25565"
-    volumes:
-      - ./server-data:/data
+    restart: unless-stopped
     stdin_open: true
     tty: true
+    ports:
+      - "25565:25565/tcp"
+      - "24454:24454/udp"   # Simple Voice Chat
+    volumes:
+      - ./server-data-neoforge:/data
+      - ./mods:/data/mods
+    environment:
+      EULA: "true"
+      TYPE: "NEOFORGE"
+      VERSION: "1.21.1"
+      NEOFORGE_VERSION: "21.1.248"
+      TZ: "America/Sao_Paulo"
 
-volumes:
-  mc-data:
-    name: mc-data
+      # heap 5G + ~1G de overhead da JVM (metaspace, GC, off-heap) cabe no limite de 7G;
+      # com 6G o container encostava em 6.6G/7G e corria risco de OOM-kill
+      MEMORY: "5G"
+      USE_AIKAR_FLAGS: "true"
+
+      MOTD: "Guerra dos Rapazes"
+      LEVEL: "guerra"
+      LEVEL_TYPE: "${LEVEL_TYPE:-minecraft:normal}"
+      MAX_PLAYERS: "10"
+      DIFFICULTY: "hard"
+      PVP: "true"
+      SPAWN_PROTECTION: "0"
+      ALLOW_FLIGHT: "true"
+      VIEW_DISTANCE: "10"
+      SIMULATION_DISTANCE: "6"
+      MAX_TICK_TIME: "-1"
+      SYNC_CHUNK_WRITES: "false"
+      OVERRIDE_SERVER_PROPERTIES: "true"
+
+      ENABLE_RCON: "true"
+      RCON_PASSWORD: "${RCON_PASSWORD:?defina RCON_PASSWORD no .env}"
+      OPS: "${OPS:-}"
+
+      # host tem 4 CPUs: 3 para o servidor, 1 para o SO
+      JVM_XX_OPTS: "-XX:ActiveProcessorCount=3"
+    deploy:
+      resources:
+        limits:
+          cpus: "3.5"
+          memory: "7G"
