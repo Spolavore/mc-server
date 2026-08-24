@@ -116,7 +116,7 @@ conteúdo some junto quando o tempo estoura.
 Conecta em `localhost:25566` (ou `IP-do-host:25566`). É uma stack **independente** do guerra:
 container `minecraft-atm10`, dados em `server-data-atm10/`, mundo `atm10`. Nada do guerra é tocado.
 
-**Os dois não rodam juntos** — 6G+5G de heap não cabem nos 14G do host. O
+**Os dois não rodam juntos** — os heaps somados não cabem na RAM do host. O
 `init-server.atm10.sh` se recusa a subir se o container `minecraft-server` estiver de pé.
 
 ### Os mods vêm do server pack oficial, não da pasta do cliente
@@ -153,8 +153,13 @@ sozinho, e script solto na raiz é convite para subir um segundo servidor com ou
 |---|---|---|
 | Porta | **25566**/tcp | 25565 é do guerra |
 | NeoForge | 21.1.247 | versão que o server pack do 8.0 fixa (o guerra usa 248) |
-| Heap | 6G (limite do container 8G) | o pack pede 8G, mas sobram ~4G livres com o CurseForge aberto |
-| CPU | limite 6.0, `-XX:ActiveProcessorCount=6` | este host tem 8 núcleos — **num host de 4, baixe para 3** |
+| Heap | `ATM10_MEMORY` (4G) / limite `ATM10_MEM_LIMIT` (6G) | os 455 mods custam ~1.4G de metaspace/GC/code cache **em cima** do heap, e o Aikar commita o heap inteiro: 6G de heap deu 7.4G de RSS medidos |
+| CPU | `ATM10_CPUS` (3.5), `ATM10_APC` (3) | VM tem 4 núcleos; 1 fica para o SO |
+
+Os defaults são os da VM (4 CPUs, 8 GB). Heap, limite e núcleos vêm do `.env`, que **não vai para
+o git**, então cada máquina usa os seus: neste desktop de 14 GB dá para subir para
+`ATM10_MEMORY=6G` / `ATM10_MEM_LIMIT=9G` / `ATM10_CPUS=6.0` / `ATM10_APC=6`.
+Passar do limite do container é OOM-kill, não swap.
 | Mundo | `atm10` | |
 | Mods | `server-data-atm10/mods` dentro do volume | sem bind mount separado: a fonte é o zip |
 | view / simulation | 8 / 6 | ATM10 é bem mais pesado que o pack do guerra |

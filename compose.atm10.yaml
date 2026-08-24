@@ -16,9 +16,9 @@ services:
       NEOFORGE_VERSION: "21.1.247"   # versao que o proprio server pack do ATM10 8.0 fixa
       TZ: "America/Sao_Paulo"
 
-      # o pack pede 8G, mas com 14G no host so sobra isso depois do SO e do CurseForge aberto;
-      # 6G de heap + overhead da JVM cabe no limite de 8G do container
-      MEMORY: "6G"
+      # 455 mods custam ~1.4G de metaspace/GC/code cache em cima do heap, e o Aikar commita
+      # o heap inteiro de saida: 6G de heap deu 7.4G de RSS. Ajuste por maquina no .env.
+      MEMORY: "${ATM10_MEMORY:-4G}"
       USE_AIKAR_FLAGS: "true"
 
       MOTD: "ATM10 - teste"
@@ -36,9 +36,9 @@ services:
       RCON_PASSWORD: "${RCON_PASSWORD:?defina RCON_PASSWORD no .env}"
       OPS: "${OPS:-}"
 
-      JVM_XX_OPTS: "-XX:ActiveProcessorCount=6"
+      JVM_XX_OPTS: "-XX:ActiveProcessorCount=${ATM10_APC:-3}"
     deploy:
       resources:
         limits:
-          cpus: "6.0"
-          memory: "8G"
+          cpus: "${ATM10_CPUS:-3.5}"
+          memory: "${ATM10_MEM_LIMIT:-6G}"
