@@ -21,5 +21,11 @@ if [ -d config-overrides ]; then
   echo "configs de config-overrides/ aplicados"
 fi
 
+# icone que aparece na lista de servidores: PNG 64x64 versionado no repo
+if [ -f server-icon.png ]; then
+  cp server-icon.png server-data-neoforge/server-icon.png
+  echo "server-icon.png aplicado"
+fi
+
 docker compose -f compose.yaml up -d
 echo "subindo... acompanhe com: docker compose logs -f"

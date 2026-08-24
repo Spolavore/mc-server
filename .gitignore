@@ -3,3 +3,5 @@ server-data/
 server-data-neoforge/
 backups/
 plugins
+.cache/
+server-data-atm10/

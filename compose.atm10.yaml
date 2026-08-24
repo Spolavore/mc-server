@@ -1,0 +1,44 @@
+services:
+  mc-atm10:
+    image: itzg/minecraft-server:java21
+    container_name: minecraft-atm10
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    ports:
+      - "25566:25565/tcp"   # 25565 e do servidor guerra; ATM10 fica no 25566
+    volumes:
+      - ./server-data-atm10:/data
+    environment:
+      EULA: "true"
+      TYPE: "NEOFORGE"
+      VERSION: "1.21.1"
+      NEOFORGE_VERSION: "21.1.247"   # versao que o proprio server pack do ATM10 8.0 fixa
+      TZ: "America/Sao_Paulo"
+
+      # o pack pede 8G, mas com 14G no host so sobra isso depois do SO e do CurseForge aberto;
+      # 6G de heap + overhead da JVM cabe no limite de 8G do container
+      MEMORY: "6G"
+      USE_AIKAR_FLAGS: "true"
+
+      MOTD: "ATM10 - teste"
+      LEVEL: "atm10"
+      MAX_PLAYERS: "5"
+      DIFFICULTY: "normal"
+      ALLOW_FLIGHT: "true"
+      VIEW_DISTANCE: "8"
+      SIMULATION_DISTANCE: "6"
+      MAX_TICK_TIME: "-1"
+      SYNC_CHUNK_WRITES: "false"
+      OVERRIDE_SERVER_PROPERTIES: "true"
+
+      ENABLE_RCON: "true"
+      RCON_PASSWORD: "${RCON_PASSWORD:?defina RCON_PASSWORD no .env}"
+      OPS: "${OPS:-}"
+
+      JVM_XX_OPTS: "-XX:ActiveProcessorCount=6"
+    deploy:
+      resources:
+        limits:
+          cpus: "6.0"
+          memory: "8G"

@@ -12,6 +12,21 @@ Servidor modded (71 jars) rodando em container `itzg/minecraft-server`.
 O `.env` guarda `RCON_PASSWORD` (gerada automaticamente) e `OPS`.
 **Coloque seu nick em `OPS`** e recrie o container (`docker compose up -d`) para virar operador.
 
+## Ícone do servidor
+
+O que aparece do lado do nome na lista de servidores é um **PNG de exatamente 64x64** chamado
+`server-icon.png`. Coloque o arquivo na raiz do repo — o `init-server.sh` copia para
+`server-data-neoforge/` a cada subida, então ele sobrevive a clone e a máquina nova.
+
+Converter qualquer foto para o formato certo (ImageMagick):
+
+    magick foto.jpg -resize 64x64^ -gravity center -extent 64x64 server-icon.png
+
+O `-resize 64x64^` + `-extent` corta pelo centro em vez de espremer a imagem.
+
+Depois: commit, `git pull` na máquina do servidor, `./init-server.sh` e **reinicie o container** —
+o ícone só é lido no boot (`docker compose restart`).
+
 ## Rodar em outra máquina
 
     git clone <este repo> && cd mc-server && ./init-server.sh
@@ -91,6 +106,58 @@ consegue saquear o corpo. O que continua no padrão é `corpse.despawn.force_tim
 dentro **nunca some**, então o derrotado pode voltar e recuperar o próprio equipamento. Se quiser que
 a kill transfira o loot de verdade, põe algo como `force_time = 6000` (5 min) — mas atenção, aí o
 conteúdo some junto quando o tempo estoura.
+
+## Servidor de teste: All the Mods 10 (stack separada)
+
+    ./init-server.atm10.sh                                  # sobe na porta 25566
+    docker compose -f compose.atm10.yaml logs -f            # acompanha
+    docker compose -f compose.atm10.yaml down               # para
+
+Conecta em `localhost:25566` (ou `IP-do-host:25566`). É uma stack **independente** do guerra:
+container `minecraft-atm10`, dados em `server-data-atm10/`, mundo `atm10`. Nada do guerra é tocado.
+
+**Os dois não rodam juntos** — 6G+5G de heap não cabem nos 14G do host. O
+`init-server.atm10.sh` se recusa a subir se o container `minecraft-server` estiver de pé.
+
+### Os mods vêm do server pack oficial, não da pasta do cliente
+
+A instância do CurseForge tem **482 jars**; o server pack do ATM10 8.0 tem **455**. Os 27 de
+diferença são client-only e derrubam servidor dedicado com o mesmo erro do Iron Furnaces Reburn
+(`invalid dist DEDICATED_SERVER`) — Sodium, Iris, FancyMenu, JustZoom, NotEnoughAnimations e
+companhia; nenhum mod novo entra no sentido contrário. Copiar
+`mods/` do cliente é caçar crash um por um; o server pack já vem certo, com `config/`,
+`defaultconfigs/`, `kubejs/` e `datapacks/` do pack.
+
+O `fileID` do server pack sai do próprio CurseForge: campo `serverPackFileId` em
+`minecraftinstance.json` da instância (`8649107` para o 8.0). O CDN serve sem API key:
+
+    https://mediafilez.forgecdn.net/files/8649/107/ServerFiles-8.0.zip
+
+O `init-server.atm10.sh` baixa esse zip para `.cache/` e extrai na primeira subida, então
+**clone novo funciona sozinho** — só precisa de banda para 1.2 GB. Os 455 jars **não** estão no
+git (ao contrário dos 71 do guerra): `.cache/` e `server-data-atm10/` estão no `.gitignore`,
+senão o repo passaria de 1.5 GB.
+
+`startserver.sh`, `user_jvm_args.txt` e o installer do NeoForge que vêm no zip foram movidos para
+`server-data-atm10/.pack-launcher-original/` — o itzg instala o NeoForge e monta os flags de JVM
+sozinho, e script solto na raiz é convite para subir um segundo servidor com outra config.
+
+### Como está configurado
+
+| Item | Valor | Por quê |
+|---|---|---|
+| Porta | **25566**/tcp | 25565 é do guerra |
+| NeoForge | 21.1.247 | versão que o server pack do 8.0 fixa (o guerra usa 248) |
+| Heap | 6G (limite do container 8G) | o pack pede 8G, mas sobram ~4G livres com o CurseForge aberto |
+| CPU | limite 6.0, `-XX:ActiveProcessorCount=6` | este host tem 8 núcleos — **num host de 4, baixe para 3** |
+| Mundo | `atm10` | |
+| Mods | `server-data-atm10/mods` dentro do volume | sem bind mount separado: a fonte é o zip |
+| view / simulation | 8 / 6 | ATM10 é bem mais pesado que o pack do guerra |
+| `max-tick-time` | -1 | primeiro boot com KubeJS + 455 mods estoura o watchdog |
+| Voice chat | sem porta UDP | o ATM10 não traz o Simple Voice Chat |
+
+Primeiro boot demora vários minutos (instala NeoForge, roda KubeJS, gera o mundo). Sem
+whitelist e sem RCON exposto — o `.env` de `RCON_PASSWORD`/`OPS` é o mesmo do guerra.
 
 ## O que falta decidir antes da guerra
 
