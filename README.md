@@ -135,8 +135,13 @@ O `fileID` do server pack sai do próprio CurseForge: campo `serverPackFileId` e
 
 O `init-server.atm10.sh` baixa esse zip para `.cache/` e extrai na primeira subida, então
 **clone novo funciona sozinho** — só precisa de banda para 1.2 GB. Os 455 jars **não** estão no
-git (ao contrário dos 71 do guerra): `.cache/` e `server-data-atm10/` estão no `.gitignore`,
-senão o repo passaria de 1.5 GB.
+git (ao contrário dos 71 do guerra): `.cache/` e `server-data-atm10/` estão no `.gitignore`.
+Não é só tamanho de repo — o GitHub rejeita arquivo acima de 100 MB, e o zip tem 1.2 GB. O que vai
+para a VM pelo git é só o script e o compose; o pack a VM baixa sozinha na primeira subida.
+
+Na VM não precisa de `unzip` nem de `curl`: o script usa o que existir, na ordem
+`curl`/`wget` para baixar e `unzip`/`python3` para extrair, e cai num container `busybox`
+se não houver nenhum dos dois — docker está garantido, é o que roda o servidor.
 
 `startserver.sh`, `user_jvm_args.txt` e o installer do NeoForge que vêm no zip foram movidos para
 `server-data-atm10/.pack-launcher-original/` — o itzg instala o NeoForge e monta os flags de JVM
